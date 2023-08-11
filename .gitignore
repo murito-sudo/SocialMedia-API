@@ -1,10 +1,10 @@
 HELP.md
-!**/src/main/**/build/reports
-!**/src/main/**/build/test-results
-!**/src/main/**/build/tmp
-!**/src/main/**/build/resources
-!**/src/main/**/build/classes
-!**/src/main/**/build/generated
+!**/build/reports
+!**/build/test-results
+!**/build/tmp
+!**/build/resources
+!**/build/classes
+!**/build/generated
 
 ### STS ###
 .apt_generated
