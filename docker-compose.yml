@@ -1,0 +1,27 @@
+version: '3.8'
+
+
+     
+
+services:
+    # Spring Boot Application
+  social_media_api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: social_media_api:latest
+    restart: always
+    container_name: social_media_api
+    environment:
+      SPRING_DATA_MONGODB_URI: mongodb://mongodb:27017/social-media-api
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql-host:3306/social-media-api
+      SPRING_DATASOURCE_USERNAME: socialmedia
+      SPRING_DATASOURCE_PASSWORD: root
+    ports:
+      - 8080:8080
+
+    
+
+
+
+
