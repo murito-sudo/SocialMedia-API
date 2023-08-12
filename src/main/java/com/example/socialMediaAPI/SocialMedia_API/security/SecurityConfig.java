@@ -31,6 +31,7 @@ public class SecurityConfig {
 	        return http
 	                .csrf().disable()
 	                .authorizeRequests(auth -> auth
+	                		
 	                        .anyRequest().authenticated()
 	                )
 	                .userDetailsService(myUserDetailsService)

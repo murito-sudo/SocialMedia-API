@@ -18,6 +18,7 @@ import org.springframework.http.HttpStatus;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 
@@ -126,13 +127,13 @@ public class UserResource {
 	
 	
 	@PostMapping("/user/{password}")
-	@PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_USER')")
 	public ResponseEntity<Object> addUser(@PathVariable String password, @Valid @RequestBody UserDet userDet){
 		
 		if(!UMR.findByusername(userDet.getUsername()).isEmpty() || !UCJR.findByusername(userDet.getUsername()).isEmpty()) {
 			return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
 		}
 		
+	
 		
 		userDet.setPosts(new LinkedList<String>());
 		userDet.setStories(new LinkedList<String>());
@@ -174,6 +175,11 @@ public class UserResource {
 			uc.get().setUsername(username);
 			UMR.save(ud.get());
 			UCJR.save(uc.get());
+			Authentication newAuthentication = new UsernamePasswordAuthenticationToken(
+	                username, authentication.getCredentials(), authentication.getAuthorities());
+	            
+	        // Set the new Authentication object in the SecurityContext
+	        SecurityContextHolder.getContext().setAuthentication(newAuthentication);
 			return ResponseEntity.status(HttpStatus.ACCEPTED).build();
 			
 		}else {
@@ -286,7 +292,7 @@ public class UserResource {
 	
 	
 	@PutMapping("/changePassword/{pass}")
-	@PreAuthorize("hasRole('ROLE_ADMIN')")
+	@PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_USER')")
 	public ResponseEntity<Object> changePassword(@PathVariable String pass){
 		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 		Optional<UserCred> uc = UCJR.findByusername(authentication.getName());

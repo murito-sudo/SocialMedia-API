@@ -1,4 +1,8 @@
 HELP.md
+
+*.html
+*.css
+*.js
 /build/reports
 /build/test-results
 /build/tmp
