@@ -28,6 +28,7 @@ Social Media Backend API with multiple REST API endpoints capable of performing 
 ```
 - Before running the spring-boot app container, make sure both MySQL and Mongo containers are running.
 
+# Usage
 ### Check the [Wiki](https://github.com/murito-sudo/SocialMedia-API/wiki) for the api documentation.
 
 # Docker Images File
