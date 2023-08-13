@@ -30,9 +30,10 @@ public class SecurityConfig {
 	    SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
 	        return http
 	                .csrf().disable()
-	                .authorizeRequests(auth -> auth
-	                		
+	                .authorizeRequests(auth -> auth 
+	                		.requestMatchers(new CustomPathVariableRequestMatcher()).permitAll()
 	                        .anyRequest().authenticated()
+	                        
 	                )
 	                .userDetailsService(myUserDetailsService)
 	                .headers(headers -> headers.frameOptions().sameOrigin())

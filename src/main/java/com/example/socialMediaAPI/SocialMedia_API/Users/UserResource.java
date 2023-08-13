@@ -126,11 +126,16 @@ public class UserResource {
 	
 	
 	
-	@PostMapping("/user/{password}")
+	@PostMapping("/register/{password}")
 	public ResponseEntity<Object> addUser(@PathVariable String password, @Valid @RequestBody UserDet userDet){
 		
 		if(!UMR.findByusername(userDet.getUsername()).isEmpty() || !UCJR.findByusername(userDet.getUsername()).isEmpty()) {
 			return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+		}
+		
+		if(password.trim().length() == 0 || password.contains(" ")) {
+			return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+			
 		}
 		
 	
