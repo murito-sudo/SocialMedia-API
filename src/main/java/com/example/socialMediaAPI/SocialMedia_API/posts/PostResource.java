@@ -6,10 +6,7 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RestController;
@@ -45,13 +42,22 @@ public class PostResource {
 	}
 	
 	@GetMapping("/post/{id}")
-	@PreAuthorize("hasRole('ROLE_ADMIN', 'ROLE_USER')")
+	@PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_USER')")
 	public Post retrievePost(@PathVariable String id) {
+		Optional<Post> pd = pmr.findById(id);
+		if(pd.isEmpty()) {
+			return null;
+		}
+		if(umr.findById(pd.get().getPosterId()).isEmpty()) {
+			pmr.deleteById(id);
+			return null;
+			
+		}
 		return pmr.findById(id).get();
 	}
 	
 	@GetMapping("/user/{id}/posts")
-	@PreAuthorize("hasRole('ROLE_ADMIN') or hasRole('ROLE_USER')")
+	@PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_USER')")
 	public List<Post> retrieveUserPosts(@PathVariable String id){
 		
 		List<Post> l = new LinkedList<Post>();
@@ -59,6 +65,7 @@ public class PostResource {
 		Optional<UserDet> ud = umr.findById(id);
 		
 		for(String p : ud.get().getPosts()) {
+			
 			l.add(pmr.findById(p).get());
 		}
 		
@@ -66,7 +73,7 @@ public class PostResource {
 	}
 	
 	@GetMapping("/user/{id}/post/{postid}")
-	@PreAuthorize("hasRole('ROLE_ADMIN', 'ROLE_USER')")
+	@PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_USER')")
 	public Post retrieveUserPosts(@PathVariable String id, @PathVariable String postid){
 		
 		
@@ -80,25 +87,35 @@ public class PostResource {
 		return pmr.findById(postid).get();
 	}
 	
-	@GetMapping("/post/{id}/likes")
-	@PreAuthorize("hasRole('ROLE_ADMIN', 'ROLE_USER')")
-	public List<UserDet> retrievePostLikes(@PathVariable String id){
+	@GetMapping("/post/{pid}/likes")
+	@PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_USER')")
+	public List<UserDet> postlikes(@PathVariable String pid){
 		
-		Optional<Post> pd = pmr.findById(id);
+		
 		List<UserDet> l = new LinkedList<UserDet>();
 		
-		for(String d : pd.get().getLikes()) {
-			l.add(umr.findById(d).get());
+		Optional<Post> pd = pmr.findById(pid);
+		
+		for(String p : pd.get().getLikes()) {
+			
+			if(umr.findById(p).isEmpty()) {
+				pd.get().getLikes().remove(p);
+			}else {
+				l.add(umr.findById(p).get());
+			}
+			
 		}
-	
+		
+		pmr.save(pd.get());
 		
 		return l;
+		
 	}
 	
 	
 	
 	@GetMapping("/post/{id}/username/likes")
-	@PreAuthorize("hasRole('ROLE_ADMIN', 'ROLE_USER')")
+	@PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_USER')")
 	public List<String> retrievePostLikesUsernames(@PathVariable String id){
 		
 		Optional<Post> pd = pmr.findById(id);
@@ -113,31 +130,5 @@ public class PostResource {
 	}
 	
 	
-	
-	
-	
-	
-	
-	@DeleteMapping("/deletePost/{id}")
-	@PreAuthorize("hasRole('ROLE_ADMIN')")
-	public ResponseEntity<Object> deleteId(@PathVariable String id){
-		if(pmr.findById(id).isEmpty()) {
-			return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
-		}
-		
-		Optional<Post> pd = pmr.findById(id);
-		
-		Optional<UserDet> ud = umr.findById(pd.get().getPosterId());
-		
-		ud.get().getPosts().remove(id);
-		
-		
-		pmr.deleteById(id);
-		
-		return ResponseEntity.status(HttpStatus.ACCEPTED).build();
-		
-		
-		
-	}
 	
 }

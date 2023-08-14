@@ -37,7 +37,7 @@ public class UserStoryResource {
 	@PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_USER')")
 	public ResponseEntity<Object> createStory( @Valid @RequestBody Story story){
 		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-		Optional<UserDet> ud = UMR.findByusername(authentication.getName());
+		Optional<UserDet> ud = UMR.findByusernameIgnoreCase(authentication.getName());
 		
 		if(ud.isEmpty()) {
 			return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
@@ -68,7 +68,7 @@ public class UserStoryResource {
 	@PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_USER')")
 	public ResponseEntity<Object> seeStory(@PathVariable String sid){
 		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-		Optional<UserDet> ud = UMR.findByusername(authentication.getName());
+		Optional<UserDet> ud = UMR.findByusernameIgnoreCase(authentication.getName());
 		Optional<Story> sd = SMR.findById(sid);
 		
 		if(ud.isEmpty() || sd.isEmpty()) {
@@ -94,7 +94,7 @@ public class UserStoryResource {
 	@PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_USER')")
 	public ResponseEntity<Object> deleteStory( @PathVariable String sid){
 		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-		Optional<UserDet> ud = UMR.findByusername(authentication.getName());
+		Optional<UserDet> ud = UMR.findByusernameIgnoreCase(authentication.getName());
 		Optional<Story> sd = SMR.findById(sid);
 		
 		if(ud.isEmpty() || sd.isEmpty()) {

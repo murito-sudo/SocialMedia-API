@@ -65,7 +65,7 @@ public class UserFollowResource {
 	@PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_USER')")
 	public ResponseEntity<Object> followUser(@PathVariable String id2){
 		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-		Optional<UserDet> ud = UMR.findByusername(authentication.getName());
+		Optional<UserDet> ud = UMR.findByusernameIgnoreCase(authentication.getName());
 		Optional<UserDet> ud2 = UMR.findById(id2);
 		
 		if(ud.get().getId().equals(id2)) {
@@ -95,7 +95,7 @@ public class UserFollowResource {
 	@PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_USER')")
 	public ResponseEntity<Object> unfollowUser(@PathVariable String id2) {
 		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-		Optional<UserDet> ud = UMR.findByusername(authentication.getName());
+		Optional<UserDet> ud = UMR.findByusernameIgnoreCase(authentication.getName());
 		Optional<UserDet> ud2 = UMR.findById(id2);
 		
 		if(ud.isEmpty() || ud2.isEmpty()) {

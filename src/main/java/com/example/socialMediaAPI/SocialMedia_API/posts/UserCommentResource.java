@@ -43,7 +43,7 @@ public class UserCommentResource {
 		
 		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 		Optional<Post> pd = PMR.findById(id);
-		Optional<UserDet> ud = UMR.findByusername(authentication.getName());
+		Optional<UserDet> ud = UMR.findByusernameIgnoreCase(authentication.getName());
 		if(pd.isEmpty() || ud.isEmpty()) {
 			return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
 		}
@@ -75,7 +75,7 @@ public class UserCommentResource {
 	public ResponseEntity<Object> editComment(@PathVariable String comid, @Valid @RequestBody String text){
 		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 		Optional<Comment> cd = CMR.findById(comid);
-		Optional<UserDet> ud = UMR.findByusername(authentication.getName());
+		Optional<UserDet> ud = UMR.findByusernameIgnoreCase(authentication.getName());
 		if(cd.isEmpty() || ud.isEmpty()) {
 			return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
 		}
@@ -95,7 +95,7 @@ public class UserCommentResource {
 	public ResponseEntity<Object> likeComment(@PathVariable String comid){
 		
 		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-		Optional<UserDet> ud = UMR.findByusername(authentication.getName());
+		Optional<UserDet> ud = UMR.findByusernameIgnoreCase(authentication.getName());
 		Optional<Comment> cd = CMR.findById(comid);
 		
 		if(ud.isEmpty() || cd.isEmpty()) {
@@ -118,7 +118,7 @@ public class UserCommentResource {
 	public ResponseEntity<Object> dislikeComment(@PathVariable String comid){
 		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 		
-		Optional<UserDet> ud = UMR.findByusername(authentication.getName());
+		Optional<UserDet> ud = UMR.findByusernameIgnoreCase(authentication.getName());
 		Optional<Comment> cd = CMR.findById(comid);
 		
 		if(ud.isEmpty() || cd.isEmpty()) {
@@ -142,7 +142,7 @@ public class UserCommentResource {
 		
 		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 		Optional<Comment> cd = CMR.findById(comid);
-		Optional<UserDet> ud = UMR.findByusername(authentication.getName());
+		Optional<UserDet> ud = UMR.findByusernameIgnoreCase(authentication.getName());
 		if(cd.isEmpty() || ud.isEmpty()) {
 			return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
 		}

@@ -61,6 +61,15 @@ public class GroupResource {
 			Optional<Post> pd = PMR.findById(d);
 			if(pd.isEmpty()) {
 				gd.get().getPosts().remove(d);
+				GMR.save(gd.get());
+				continue;
+			}
+			
+			if(UMR.findById(pd.get().getPosterId()).isEmpty()) {
+				gd.get().getPosts().remove(d);
+				PMR.delete(pd.get());
+				GMR.save(gd.get());
+				continue;
 			}
 			l.add(PMR.findById(d).get());
 		}
@@ -78,13 +87,21 @@ public class GroupResource {
 			return null;
 		}
 		
+		
+		
 		if(gd.get().getPosts().contains(pid)) {
-			return pd.get();
+			if(UMR.findById(pd.get().getPosterId()).isEmpty()) {
+				gd.get().getPosts().remove(pid);
+				GMR.save(gd.get());
+				PMR.deleteById(pid);
+			}else {
+				return pd.get();
+			}
+			
 		}
 			
 		
 		return null;
-		
 	}
 	
 	@GetMapping("/group/{gid}/members")
@@ -94,7 +111,12 @@ public class GroupResource {
 		List<UserDet> l = new LinkedList<UserDet>();
 		
 		for(String p : gd.get().getMembers()) {
-			l.add(UMR.findById(p).get());
+			if(UMR.findById(p).isEmpty()) {
+				gd.get().getMembers().remove(p);
+				GMR.save(gd.get());
+			}else {
+				l.add(UMR.findById(p).get());
+			}
 		}
 		
 		return l;
@@ -108,7 +130,13 @@ public class GroupResource {
 		List<UserDet> l = new LinkedList<UserDet>();
 		
 		for(String p : gd.get().getGroupRequests()) {
-			l.add(UMR.findById(p).get());
+			if(UMR.findById(p).isEmpty()) {
+				gd.get().getGroupRequests().remove(p);
+				GMR.save(gd.get());
+			}else {
+				l.add(UMR.findById(p).get());
+			}
+			
 		}
 		
 		return l;
@@ -121,7 +149,15 @@ public class GroupResource {
 		List<UserDet> l = new LinkedList<UserDet>();
 		
 		for(String p : gd.get().getBans()) {
-			l.add(UMR.findById(p).get());
+			
+			if(UMR.findById(p).isEmpty()) {
+				gd.get().getBans().remove(p);
+				GMR.save(gd.get());
+			}else {
+				l.add(UMR.findById(p).get());
+			}
+			
+			
 		}
 		
 		return l;

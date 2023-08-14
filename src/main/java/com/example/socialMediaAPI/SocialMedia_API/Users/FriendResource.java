@@ -46,9 +46,9 @@ public class FriendResource {
 	
 	@GetMapping("/fRequests")
 	@PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_USER')")
-	public List<UserDet> retrieveRequests(@PathVariable String id){
+	public List<UserDet> retrieveRequests(){
 		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-		Optional<UserDet> ud = UMR.findByusername(authentication.getName());
+		Optional<UserDet> ud = UMR.findByusernameIgnoreCase(authentication.getName());
 		List<UserDet> l = new LinkedList<UserDet>();
 	
 		
@@ -72,7 +72,7 @@ public class FriendResource {
 	@PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_USER')")
 	public ResponseEntity<Object> sendFriendRequest(@PathVariable String id2){
 		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-		Optional<UserDet> ud = UMR.findByusername(authentication.getName());
+		Optional<UserDet> ud = UMR.findByusernameIgnoreCase(authentication.getName());
 		Optional<UserDet> ud2 = UMR.findById(id2);
 		
 		if(ud.get().getId().equals(id2)) {
@@ -105,7 +105,7 @@ public class FriendResource {
 	public ResponseEntity<Object> acceptRequest(@PathVariable String id2){
 		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 		
-		Optional<UserDet> ud = UMR.findByusername(authentication.getName());
+		Optional<UserDet> ud = UMR.findByusernameIgnoreCase(authentication.getName());
 		Optional<UserDet> ud2 = UMR.findById(id2);
 		if(ud.get().getId().equals(id2)) {
 			return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
@@ -143,7 +143,7 @@ public class FriendResource {
 	public ResponseEntity<Object> declineRequest(@PathVariable String id2){
 		
 		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-		Optional<UserDet> ud = UMR.findByusername(authentication.getName());
+		Optional<UserDet> ud = UMR.findByusernameIgnoreCase(authentication.getName());
 		Optional<UserDet> ud2 = UMR.findById(id2);
 		if(ud.get().getId().equals(id2)) {
 			return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
@@ -175,7 +175,7 @@ public class FriendResource {
 	@PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_USER')")
 	public ResponseEntity<Object> unfriendUser(@PathVariable String id2){
 		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-		Optional<UserDet> ud = UMR.findById(authentication.getName());
+		Optional<UserDet> ud = UMR.findByusernameIgnoreCase(authentication.getName());
 		Optional<UserDet> ud2 = UMR.findById(id2);
 		if(ud.get().getId().equals(id2)) {
 			return ResponseEntity.status(HttpStatus.FORBIDDEN).build();

@@ -42,7 +42,7 @@ public class AdminGroupResource {
 	public ResponseEntity<Object> createGroup(@Valid @RequestBody Group group){
 		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 		
-		Optional<UserDet> ud = UMR.findByusername(authentication.getName());
+		Optional<UserDet> ud = UMR.findByusernameIgnoreCase(authentication.getName());
 		
 		if(ud.isEmpty()) {
 			return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
@@ -53,7 +53,7 @@ public class AdminGroupResource {
 		group.setMembers(new HashSet<String>());
 		group.getMembers().add(ud.get().getId());
 		group.setPosts(new LinkedList<String>());
-		group.setGroupRequests(new LinkedList<String>());
+		group.setGroupRequests(new HashSet<String>());
 		group.setBans(new HashSet<String>());
 		
 		
@@ -70,7 +70,7 @@ public class AdminGroupResource {
 	@PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_USER')")
 	public ResponseEntity<Object> changeGroupName( @PathVariable String gid, @Valid @RequestBody String name){
 		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-		Optional<UserDet> ud = UMR.findByusername(authentication.getName());
+		Optional<UserDet> ud = UMR.findByusernameIgnoreCase(authentication.getName());
 		Optional<Group> gd = GMR.findById(gid);
 		
 		if(gd.isEmpty() || ud.isEmpty()) {
@@ -86,12 +86,41 @@ public class AdminGroupResource {
 		return ResponseEntity.status(HttpStatus.ACCEPTED).build();
 	}
 	
+	@PutMapping("/group/{gid}/changePublicity")
+	@PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_USER')")
+	public ResponseEntity<Object> changeGroupName( @PathVariable String gid, @Valid @RequestBody boolean isPublic){
+		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+		Optional<UserDet> ud = UMR.findByusernameIgnoreCase(authentication.getName());
+		Optional<Group> gd = GMR.findById(gid);
+		
+		if(gd.isEmpty() || ud.isEmpty()) {
+			return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+		}
+		
+		if(!gd.get().getGroupAdmin().equals(ud.get().getId())) {
+			return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+		}
+		
+		if(isPublic == true) {
+			for(String p : gd.get().getGroupRequests()) {
+				Optional<UserDet> ud2 = UMR.findById(p);
+				ud2.get().getGroupRequest().remove(gd.get().getId());
+				UMR.save(ud2.get());
+			}
+			gd.get().setGroupRequests(new HashSet<String>());
+		}
+		
+		gd.get().setPublic(isPublic);
+		GMR.save(gd.get());
+		return ResponseEntity.status(HttpStatus.ACCEPTED).build();
+	}
+	
 	@PutMapping("/group/{gid}/addMod/{id2}")
 	@PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_USER')")
 	public ResponseEntity<Object> addMod(@PathVariable String gid, @PathVariable String id2){
 		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 		Optional<Group> gd = GMR.findById(gid);
-		Optional<UserDet> ud = UMR.findByusername(authentication.getName());
+		Optional<UserDet> ud = UMR.findByusernameIgnoreCase(authentication.getName());
 		Optional<UserDet> ud2 = UMR.findById(id2);
 		
 		if(gd.isEmpty() || ud.isEmpty() || ud2.isEmpty()) {
@@ -113,7 +142,7 @@ public class AdminGroupResource {
 	@PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_USER')")
 	public ResponseEntity<Object> acceptRequest(@PathVariable String id2, @PathVariable String gid){
 		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-		Optional<UserDet> ud = UMR.findByusername(authentication.getName());
+		Optional<UserDet> ud = UMR.findByusernameIgnoreCase(authentication.getName());
 		Optional<UserDet> ud2 = UMR.findById(id2);
 		Optional<Group> gd = GMR.findById(gid);
 		
@@ -151,7 +180,7 @@ public class AdminGroupResource {
 	@PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_USER')")
 	public ResponseEntity<Object> declineRequest(@PathVariable String id2, @PathVariable String gid){
 		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-		Optional<UserDet> ud = UMR.findByusername(authentication.getName());
+		Optional<UserDet> ud = UMR.findByusernameIgnoreCase(authentication.getName());
 		Optional<UserDet> ud2 = UMR.findById(id2);
 		Optional<Group> gd = GMR.findById(gid);
 		
@@ -184,7 +213,7 @@ public class AdminGroupResource {
 	public ResponseEntity<Object> banUser(@PathVariable String id2, @PathVariable String gid){
 		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 		
-		Optional<UserDet> ud = UMR.findByusername(authentication.getName());
+		Optional<UserDet> ud = UMR.findByusernameIgnoreCase(authentication.getName());
 		Optional<UserDet> ud2 = UMR.findById(id2);
 		Optional<Group> gd = GMR.findById(gid);
 		
@@ -233,7 +262,7 @@ public class AdminGroupResource {
 	@PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_USER')")
 	public ResponseEntity<Object> unbanUser(@PathVariable String id2, @PathVariable String gid){
 		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-		Optional<UserDet> ud = UMR.findByusername(authentication.getName());
+		Optional<UserDet> ud = UMR.findByusernameIgnoreCase(authentication.getName());
 		Optional<UserDet> ud2 = UMR.findById(id2);
 		Optional<Group> gd = GMR.findById(gid);
 		
@@ -259,7 +288,7 @@ public class AdminGroupResource {
 	@PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_USER')")
 	public ResponseEntity<Object> deleteGroup(@PathVariable String gid){
 		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-		Optional<UserDet> ud = UMR.findByusername(authentication.getName());
+		Optional<UserDet> ud = UMR.findByusernameIgnoreCase(authentication.getName());
 		Optional<Group> gd = GMR.findById(gid);
 		
 		if(ud.isEmpty() || gd.isEmpty()) {

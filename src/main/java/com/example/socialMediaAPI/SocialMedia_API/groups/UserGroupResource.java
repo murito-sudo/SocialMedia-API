@@ -13,6 +13,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -23,6 +24,7 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import com.example.socialMediaAPI.SocialMedia_API.Users.UserDet;
 import com.example.socialMediaAPI.SocialMedia_API.Users.UserDetMongoRepository;
+import com.example.socialMediaAPI.SocialMedia_API.posts.CommentMongoRepository;
 import com.example.socialMediaAPI.SocialMedia_API.posts.Post;
 import com.example.socialMediaAPI.SocialMedia_API.posts.PostMongoRepository;
 
@@ -39,6 +41,9 @@ public class UserGroupResource {
 	
 	@Autowired
 	PostMongoRepository PMR;
+	
+	@Autowired
+	CommentMongoRepository CMR;
 	
 	
 
@@ -76,7 +81,7 @@ public class UserGroupResource {
 
 		List<Post> l = new LinkedList<Post>();
 		
-			Optional<UserDet> ud = UMR.findByusername(authentication.getName());
+			Optional<UserDet> ud = UMR.findByusernameIgnoreCase(authentication.getName());
 			Optional<Group> gd = GMR.findById(gid);
 			
 			if(ud.isEmpty() ||gd.isEmpty()) {
@@ -101,6 +106,7 @@ public class UserGroupResource {
 				}
 				
 			}
+		
 			GMR.save(gd.get());
 		
 		
@@ -127,7 +133,12 @@ public class UserGroupResource {
 		
 	
 		for(String s : gd.get().getGroupMods()) {
-			l.add(UMR.findById(s).get());
+			if(UMR.findById(s).isEmpty()) {
+				gd.get().getGroupMods().remove(s);
+				GMR.save(gd.get());
+			}else {
+				l.add(UMR.findById(s).get());
+			}
 		}
 		
 		
@@ -149,7 +160,13 @@ public class UserGroupResource {
 		
 	
 		for(String s : gd.get().getMembers()) {
-			l.add(UMR.findById(s).get());
+			if(UMR.findById(s).isEmpty()) {
+				gd.get().getMembers().remove(s);
+				GMR.save(gd.get());
+			}else {
+				l.add(UMR.findById(s).get());
+			}
+			
 		}
 		
 		
@@ -161,7 +178,7 @@ public class UserGroupResource {
 	@PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_USER')")
 	public List<UserDet> seeUsersBan(@PathVariable String id, @PathVariable String gid){
 		List<UserDet> l = new LinkedList<UserDet>();
-		Optional<UserDet> ud = UMR.findByusername(id);
+		Optional<UserDet> ud = UMR.findByusernameIgnoreCase(id);
 		Optional<Group> gd = GMR.findById(gid);
 		
 		if(ud.isEmpty() || gd.isEmpty()) {
@@ -188,7 +205,7 @@ public class UserGroupResource {
 	@PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_USER')")
 	public ResponseEntity<Object> createPost(@PathVariable String gid, @Valid @RequestBody Post post){
 		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-		Optional<UserDet> ud = UMR.findByusername(authentication.getName());
+		Optional<UserDet> ud = UMR.findByusernameIgnoreCase(authentication.getName());
 		Optional<Group> gd = GMR.findById(gid);
 		
 		if(ud.isEmpty() || gd.isEmpty()) {
@@ -216,6 +233,38 @@ public class UserGroupResource {
 		
 	}
 	
+	@DeleteMapping("group/{gid}/deleteGroupPost/{postid}")
+	@PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_USER')")
+	public ResponseEntity<Object> deleteUserPost(@PathVariable String gid, @PathVariable String postid){
+			
+		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+			Optional<UserDet> ud = UMR.findByusernameIgnoreCase(authentication.getName());
+			Optional<Group> gd = GMR.findById(gid);
+			
+			
+			if(PMR.findById(postid).isEmpty() || ud.isEmpty() || gd.isEmpty()) {
+				return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+			}
+			
+			
+			if(!PMR.findById(postid).get().getPosterId().equals(ud.get().getId())) {
+				return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+			}
+			
+			for(String p : PMR.findById(postid).get().getComments()) {
+				CMR.deleteById(p);
+			}
+			
+		
+			PMR.deleteById(postid);
+		
+			gd.get().getPosts().remove(postid);
+			GMR.save(gd.get());
+			
+			
+			return ResponseEntity.status(HttpStatus.ACCEPTED).build();
+	}
+	
 
 	
 
@@ -226,7 +275,7 @@ public class UserGroupResource {
 	@PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_USER')")
 	public ResponseEntity<Object> userJoinGroup(@PathVariable String gid){
 		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-		Optional<UserDet> ud = UMR.findByusername(authentication.getName());
+		Optional<UserDet> ud = UMR.findByusernameIgnoreCase(authentication.getName());
 		Optional<Group> gd = GMR.findById(gid);
 		
 		
@@ -236,7 +285,8 @@ public class UserGroupResource {
 			return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
 		}
 		
-		if(gd.get().getBans().contains(ud.get().getId()) || gd.get().getMembers().contains(ud.get().getId())) {
+		if(gd.get().getBans().contains(ud.get().getId()) || gd.get().getMembers().contains(ud.get().getId()) 
+				|| gd.get().getGroupRequests().contains(ud.get().getId())) {
 			return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
 		}
 		
@@ -256,11 +306,41 @@ public class UserGroupResource {
 		
 	}
 	
+	@PutMapping("/cancelGroupRequest/{gid}")
+	@PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_USER')")
+	public ResponseEntity<Object> userCancelRequestGroup(@PathVariable String gid){
+		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+		Optional<UserDet> ud = UMR.findByusernameIgnoreCase(authentication.getName());
+		Optional<Group> gd = GMR.findById(gid);
+		
+		
+		
+		
+		if(ud.isEmpty() || gd.isEmpty()) {
+			return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+		}
+		
+		if(!gd.get().getGroupRequests().contains(ud.get().getId()) || !ud.get().getGroupRequest().contains(gid)) {
+			return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+		}
+		
+		ud.get().getGroupRequest().remove(gid);
+		gd.get().getGroupRequests().remove(ud.get().getId());
+		
+		
+		
+		UMR.save(ud.get());
+		GMR.save(gd.get());
+		
+		return ResponseEntity.status(HttpStatus.ACCEPTED).build();
+		
+	}
+	
 	@PutMapping("/leaveGroup/{gid}")
 	@PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_USER')")
 	public ResponseEntity<Object> userLeaveGroup(@PathVariable String gid){
 		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-		Optional<UserDet> ud = UMR.findByusername(authentication.getName());
+		Optional<UserDet> ud = UMR.findByusernameIgnoreCase(authentication.getName());
 		Optional<Group> gd = GMR.findById(gid);
 		
 		
@@ -279,6 +359,7 @@ public class UserGroupResource {
 			ud.get().getGroups().remove(gid);
 			gd.get().getMembers().remove(ud.get().getId());
 			gd.get().getGroupMods().remove(ud.get().getId());
+			
 			
 			if(gd.get().getGroupAdmin().equals(ud.get().getId())) {
 				for(String p : gd.get().getMembers()) {

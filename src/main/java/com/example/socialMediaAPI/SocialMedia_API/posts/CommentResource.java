@@ -46,6 +46,7 @@ public class CommentResource {
 		for(String p : cd.get().getLikes()) {
 			if(UMR.findById(p).isEmpty()) {
 				cd.get().getLikes().remove(p);
+				CMR.save(cd.get());
 			}else {
 				l.add(UMR.findById(p).get().getUsername());
 			}
@@ -58,6 +59,8 @@ public class CommentResource {
 		
 	}
 	
+	
+	
 	@GetMapping("/post/{id}/comments")
 	@PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_USER')")
 	public List<Comment> retrievePostComments(@PathVariable String id){
@@ -65,12 +68,15 @@ public class CommentResource {
 		List<Comment> l = new LinkedList<Comment>();
 	
 		if(pd.isEmpty()) {
+		
 			return null;
 		}
 		
 		for(String p : pd.get().getComments()) {
 			if(UMR.findById(CMR.findById(p).get().getUserId()).isEmpty()) {
 				pd.get().getComments().remove(p);
+				CMR.deleteById(p);
+				PMR.save(pd.get());
 			}else {
 				l.add(CMR.findById(p).get());
 			}
@@ -86,6 +92,9 @@ public class CommentResource {
 		Optional<Post> pd = PMR.findById(id);
 	
 		if(pd.isEmpty()) {
+			if(CMR.findById(cid).get().getPostId().equals(id)) {
+				CMR.deleteById(id);
+			}
 			return null;
 		}
 		
@@ -93,7 +102,7 @@ public class CommentResource {
 			if(p.equals(cid)) {
 				Optional<Comment> cd = CMR.findById(cid);
 				
-				if(UMR.findById(cd.get().getId()).isEmpty()) {
+				if(UMR.findById(cd.get().getUserId()).isEmpty()) {
 					CMR.deleteById(cd.get().getId());
 					break;
 				}

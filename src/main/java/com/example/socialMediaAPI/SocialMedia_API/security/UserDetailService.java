@@ -27,7 +27,7 @@ public class UserDetailService implements UserDetailsService {
 
 	@Override
 	public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-		UserCred user = UCJR.findByusername(username).orElseThrow(() -> new UsernameNotFoundException("Username not found"));
+		UserCred user = UCJR.findByusernameIgnoreCase(username).orElseThrow(() -> new UsernameNotFoundException("Username not found"));
 		
 	    return new User(user.getUsername(), user.getPassword(), AuthorityUtils.commaSeparatedStringToAuthorityList(user.getRoles()));
 	}

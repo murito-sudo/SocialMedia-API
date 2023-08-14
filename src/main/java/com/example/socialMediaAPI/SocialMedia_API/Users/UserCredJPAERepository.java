@@ -5,6 +5,6 @@ import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface UserCredJPAERepository extends JpaRepository<UserCred, String> {
-	public Optional<UserCred> findByusername(String username);
+	public Optional<UserCred> findByusernameIgnoreCase(String username);
 	public void deleteByusername(String username);
 }

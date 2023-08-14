@@ -20,7 +20,7 @@ public class Group {
 	private HashSet<String> members;
 	private List<String> posts;
 	
-	private List<String> groupRequests;
+	private HashSet<String> groupRequests;
 	private HashSet<String> bans;
 	
 	public Group() {
@@ -28,7 +28,7 @@ public class Group {
 	}
 
 	public Group(String id, String groupAdmin, String groupName, boolean isPublic, HashSet<String> groupMods,
-			HashSet<String> members, List<String> posts, List<String> groupRequests, HashSet<String> bans) {
+			HashSet<String> members, List<String> posts, HashSet<String> groupRequests, HashSet<String> bans) {
 		super();
 		this.id = id;
 		this.groupAdmin = groupAdmin;
@@ -97,11 +97,11 @@ public class Group {
 		this.posts = posts;
 	}
 
-	public List<String> getGroupRequests() {
+	public HashSet<String> getGroupRequests() {
 		return groupRequests;
 	}
 
-	public void setGroupRequests(List<String> groupRequests) {
+	public void setGroupRequests(HashSet<String> groupRequests) {
 		this.groupRequests = groupRequests;
 	}
 

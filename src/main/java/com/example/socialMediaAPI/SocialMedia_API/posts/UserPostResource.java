@@ -38,6 +38,9 @@ public class UserPostResource {
 	@Autowired
 	PostMongoRepository PMR;
 	
+	@Autowired
+	CommentMongoRepository CMR;
+	
 	
 	
 	@GetMapping("/myPosts")
@@ -45,7 +48,7 @@ public class UserPostResource {
 	public List<Post> retrieveUserPosts(){
 		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 		
-		Optional<UserDet> ud = UMR.findByusername(authentication.getName());
+		Optional<UserDet> ud = UMR.findByusernameIgnoreCase(authentication.getName());
 		
 		List<Post> l = new LinkedList<Post>();
 		
@@ -57,37 +60,13 @@ public class UserPostResource {
 		
 	}
 	
-	@GetMapping("/post/{pid}/likes")
-	@PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_USER')")
-	public List<UserDet> postlikes(@PathVariable String pid){
-		
-		
-		List<UserDet> l = new LinkedList<UserDet>();
-		
-		Optional<Post> pd = PMR.findById(pid);
-		
-		for(String p : pd.get().getLikes()) {
-			
-			if(PMR.findById(p).isEmpty()) {
-				pd.get().getLikes().remove(p);
-			}else {
-				l.add(UMR.findById(p).get());
-			}
-			
-		}
-		
-		PMR.save(pd.get());
-		
-		return l;
-		
-	}
 	
 	@PostMapping("/createPost")
 	@PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_USER')")
 	public ResponseEntity<Object> createPost(@Valid @RequestBody Post post){
 		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 		
-		Optional<UserDet> ud = UMR.findByusername(authentication.getName());
+		Optional<UserDet> ud = UMR.findByusernameIgnoreCase(authentication.getName());
 		
 		if(ud.isEmpty()) {
 			return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
@@ -121,7 +100,7 @@ public class UserPostResource {
 		
 		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 		
-		Optional<UserDet> ud = UMR.findByusername(authentication.getName());
+		Optional<UserDet> ud = UMR.findByusernameIgnoreCase(authentication.getName());
 		Optional<Post> pd = PMR.findById(postid);
 		
 		if(ud.isEmpty() || pd.isEmpty()) {
@@ -148,7 +127,7 @@ public class UserPostResource {
 	public ResponseEntity<Object> likePost(@PathVariable String postid){
 		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 		
-		Optional<UserDet> ud = UMR.findByusername(authentication.getName());
+		Optional<UserDet> ud = UMR.findByusernameIgnoreCase(authentication.getName());
 		Optional<Post> pd = PMR.findById(postid);
 		
 		
@@ -172,7 +151,7 @@ public class UserPostResource {
 	public ResponseEntity<Object> unlikePost(@PathVariable String postid){
 		
 		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-		Optional<UserDet> ud = UMR.findByusername(authentication.getName());
+		Optional<UserDet> ud = UMR.findByusernameIgnoreCase(authentication.getName());
 		Optional<Post> pd = PMR.findById(postid);
 		
 		if(ud.isEmpty() || pd.isEmpty()) {
@@ -190,12 +169,12 @@ public class UserPostResource {
 	
 	
 	
-	@DeleteMapping("/deletePost/{id2}")
+	@DeleteMapping("/deletePost/{postid}")
 	@PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_USER')")
 	public ResponseEntity<Object> deleteUserPost(@PathVariable String postid){
 			
 		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-			Optional<UserDet> ud = UMR.findByusername(authentication.getName());
+			Optional<UserDet> ud = UMR.findByusernameIgnoreCase(authentication.getName());
 			
 			
 			if(PMR.findById(postid).isEmpty() || ud.isEmpty()) {
@@ -205,6 +184,10 @@ public class UserPostResource {
 			
 			if(!ud.get().getPosts().contains(postid)) {
 				return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+			}
+			
+			for(String p : PMR.findById(postid).get().getComments()) {
+				CMR.deleteById(p);
 			}
 			PMR.deleteById(postid);
 			ud.get().getPosts().remove(postid);
